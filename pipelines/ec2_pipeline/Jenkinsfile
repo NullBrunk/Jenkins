@@ -1,0 +1,173 @@
+pipeline {
+    agent any
+    
+    tools {
+        // Manage Jenkins -> tools
+        maven "M3"
+        nodejs "N20"
+    }
+    
+    environment {
+        SPRING_DATASOURCE_URL = 'jdbc:postgresql://postgres:5432/base-db_ci'
+        SPRING_PROFILES_ACTIVE = 'ci'
+        
+        DOCKER_REGISTRY = 'https://registry.hub.docker.com'
+        DOCKER_BACKEND_IMAGE = 'example/backend'
+        DOCKER_FRONTEND_IMAGE = 'example/frontend'
+        
+        GITHUB_REPO_SSH = 'git@github.com:example/backend.git'
+        GITHUB_BRANCH = 'master'
+        
+        BACKEND_HOST = 'backend.dev'
+        FRONTEND_HOST = 'www.dev'
+    }
+    
+    stages {
+        stage("Notify, initialize time") {
+            steps {
+                withCredentials([ string(credentialsId: 'discord-webhook',variable: 'DISCORD_WEBHOOK') ]) {
+                    sh """ curl -H "Content-Type: application/json" -X POST \
+                        -d '{
+                            "embeds": [{
+                                "title": "${env.JOB_NAME}",
+                                "url": "${env.BUILD_URL}",
+                                "description": "Build ``#${env.BUILD_NUMBER}`` started",
+                                "color": 0
+                            }]
+                        }' ${DISCORD_WEBHOOK}
+                    """
+                }
+            }
+        }
+        
+        stage("Backend: Checkout") {
+            steps {
+                git(url: "${GITHUB_REPO_SSH}", credentialsId: 'jenkins-ssh-key', branch: "${GITHUB_BRANCH}")                
+            }
+        }
+        
+        stage("Backend: Build") {
+            steps {
+                sh "mvn -B -ntp clean package -DskipTests"
+            }
+        }
+        
+        stage("Backend: Test") {
+            steps {
+                sh "mvn -B -ntp test -Dsurefire.useFile=false -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE}"
+            }
+        }
+        
+        
+        stage("Frontend: Install") {
+            steps {
+                dir("frontend") {
+                    sh "npm ci"
+                }
+            }
+        }
+        
+        stage("Frontend: Build") {
+            steps {
+                dir("frontend") {
+                    sh "npm run build"
+                }
+            }
+        }
+        
+        stage("Frontend: Test") {
+            steps {
+                dir("frontend") {
+                    sh "npm run test"
+                }
+            }
+        }
+        
+        stage("Backend: SonarQube Analysis") {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh "mvn -B -ntp sonar:sonar -Dsonar.projectKey=example"
+                }
+            }
+        }
+        
+        stage("Docker Build & push backend") {
+            steps {
+                script {
+                    docker.withRegistry("${DOCKER_REGISTRY}", 'docker-hub-creds') {
+                        def image = docker.build("${DOCKER_BACKEND_IMAGE}:${BUILD_NUMBER}")
+                        image.push("${BUILD_NUMBER}")
+                        image.push("latest")
+                    }
+                }
+            }
+        }
+        
+        stage("Docker: Build & push frontend") {         
+            steps {
+                dir("frontend") {
+                    script {
+                        docker.withRegistry("${DOCKER_REGISTRY}", 'docker-hub-creds') {
+                            def image = docker.build("${DOCKER_FRONTEND_IMAGE}:${BUILD_NUMBER}")
+                            image.push("${BUILD_NUMBER}")
+                            image.push("latest")
+                        }
+                    }
+                }                
+            }
+        }     
+        
+        stage("Trivy Scan") {
+            steps {
+                sh "/var/jenkins_home/trivy image --exit-code 0 --no-progress --format template --template '@/var/jenkins_home/html.tpl' -o trivy-report.html ${DOCKER_BACKEND_IMAGE}:${BUILD_NUMBER}"            
+            }
+        }
+        
+        stage("Deploy on EC2") {
+            steps {
+                sshagent(['aws-key']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no admin@${BACKEND_HOST} "docker compose pull && docker compose up -d"
+                    '''
+                    
+                     sh '''
+                        ssh -o StrictHostKeyChecking=no admin@${FRONTEND_HOST} "docker compose pull && docker compose up -d"
+                    '''
+                }        
+            }
+        }
+    }
+
+    post {
+        always {
+            junit '**/target/surefire-reports/TEST-*.xml'
+            
+            publishHTML(target: [
+                allowMissing         : false,
+                alwaysLinkToLastBuild: true,
+                keepAll              : true,
+                reportDir            : '.',
+                reportFiles          : 'trivy-report.html',
+                reportName           : 'Security Report'
+            ])  
+
+            withCredentials([ string(credentialsId: 'discord-webhook',variable: 'DISCORD_WEBHOOK') ]) {
+                sh """ curl -H "Content-Type: application/json" -X POST \
+                    -d '{
+                        "embeds": [{
+                            "title": "${env.JOB_NAME}",
+                            "url": "${env.BUILD_URL}",
+                            "description": "Build ``#${env.BUILD_NUMBER}`` ended with status: ``${currentBuild.currentResult}``",
+                            "color": ${currentBuild.currentResult == "SUCCESS" ? 1681177 : 11278615}
+                        }]
+                    }' ${DISCORD_WEBHOOK}
+                """
+            }
+            
+            // Suppression de dossier de cache lourd
+            sh "rm -rf '${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/htmlreports/Security_20Report/frontend'"
+            sh "rm -rf '${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/htmlreports/Security_20Report/target/mondecole-pocket-0.0.1-SNAPSHOT.jar'"        
+
+        }
+    }
+}
