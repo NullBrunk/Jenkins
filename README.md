@@ -9,7 +9,6 @@
 | :---------------------| :--------------- | 
 | <a href="https://github.com/mondecole/jenkins/tree/main/pipelines/ec2_pipeline/">EC2 Pipeline</a>        | Pipeline complète avec DevSecOps, Quality Gate et notifications |
 | <a href="https://github.com/mondecole/jenkins/tree/main/pipelines/k8s_pipeline/">K8s Pipeline</a>        | Variante Kubernetes remplaçant le déploiement EC2 classique |
-| <a href="https://github.com/mondecole/jenkins/tree/main/pipelines/travelops_pipeline/">Travelops Pipeline</a>  | Pipeline spécifique au projet TravelOps |
 
 
 
@@ -158,35 +157,3 @@ Kubernetes
 Source: <a href="https://github.com/mondecole/jenkins/tree/main/pipelines/k8s_pipeline/">pipelines/k8s_pipeline/</a>
 
 
-### TravelOps Pipeline
-
-_Pipeline dédiée au projet TravelOps._
-
-Fonctionnalités :
-- build backend ;
-- build frontend ;
-- tests frontend ;
-- déploiement distant sur serveur de production ;
-- mise à jour automatique du dépôt ;
-- redéploiement via Docker Compose ;
-- notifications Discord.
-
-#### Workflow
-```
-
-Logging
-  |
-  ├── Discord Notification (start, end)
-  |
-Continuous Integration
-  |
-  ├── GitHub (checkout)
-  ├── Build Backend (Maven)
-  ├── Build Frontend (npm)
-  |
-Continuous Deployment
-  |
-  └── EC2 Deployment (docker compose pull)
-```
-
-Source: <a href="https://github.com/mondecole/jenkins/tree/main/pipelines/travelops_pipeline/">pipelines/travelops_pipeline/</a>
