@@ -1,159 +1,146 @@
 <div align="center">
 
-# Jenkinsfiles
+# Jenkins
+_CI/CD pipelines for a Java + Node.js application, delivered on AWS EC2 or Kubernetes_
 
+![Jenkins](https://img.shields.io/badge/Jenkins-D24939?logo=jenkins&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=white)
+![AWS EC2](https://img.shields.io/badge/AWS-EC2-FF9900?logo=amazonaws&logoColor=white)
+![SonarQube](https://img.shields.io/badge/SonarQube-4E9BCD?logo=sonarqubeserver&logoColor=white)
+![Trivy](https://img.shields.io/badge/Trivy-1904DA)
 
 </div>
 
-| Pipeline              | Utilité          | 
-| :---------------------| :--------------- | 
-| <a href="https://github.com/mondecole/jenkins/tree/main/pipelines/ec2_pipeline/">EC2 Pipeline</a>        | Pipeline complète avec DevSecOps, Quality Gate et notifications |
-| <a href="https://github.com/mondecole/jenkins/tree/main/pipelines/k8s_pipeline/">K8s Pipeline</a>        | Variante Kubernetes remplaçant le déploiement EC2 classique |
+Two ready-to-use Jenkins pipelines that take an application from source code to a running service: they **build and test** it, **check its quality and security**, **package it in Docker images**, **deliver** it to the servers and **tell the team** how it went. Everything runs automatically, from a single Jenkinsfile.
 
+Originally written during my junior DevOps internship, then made generic so it can be reused on any project.
 
+## Overview
 
-<br>
+<img src="docs/overview.svg" alt="Your code goes through a Jenkins pipeline: build and test, check code quality, package in Docker images, scan for security issues, then deliver to EC2 servers or a Kubernetes cluster. The team is notified in a chat." width="100%">
 
+| Pipeline | Delivers the backend to | Delivers the frontend to |
+| :-- | :-- | :-- |
+| [EC2 pipeline](pipelines/ec2_pipeline/Jenkinsfile) | An EC2 server | An EC2 server |
+| [K8s pipeline](pipelines/k8s_pipeline/Jenkinsfile) | A Kubernetes cluster | An EC2 server |
 
-## 🔄 Base Pipeline
+Both pipelines share the same first seven steps. Only the last one, the delivery, differs.
 
-Toutes les pipelines ci dessous sont basés sur une Pipeline initiale qui possède les fonctionnalités suivantes:
+---
 
-**Fonctionnalités :**
-- récupération du code depuis GitHub ;
-- compilation du backend (Maven) ;
-- installation et build du frontend (Node.js) ;
-- exécution des tests backend ;
-- exécution des tests frontend.
-- build des images Docker backend/frontend ;
-- push vers Docker Hub ;
+## EC2 pipeline
 
-#### 📈 Workflow
+The complete pipeline: it builds, tests, checks, packages and delivers the application to EC2 servers.
 
-```
-Continuous Integration
-  |
-  ├── GitHub (checkout)
-  ├── Build Backend (Maven)
-  ├── Tests Backend
-  ├── Build Frontend (npm)
-  ├── Tests Frontend
-  |
-Continuous Deployment
-  |
-  ├── Docker Build backend
-  ├── Docker Build frontend
-  └── Docker Hub (push)
+<img src="docs/ec2-pipeline.svg" alt="The eight steps of the EC2 pipeline: announce, get the code, build and test the backend, build and test the frontend, check code quality, package the apps, security scan, deliver to the backend and frontend servers. Test results, security report, final message and cleanup follow every run." width="100%">
 
-```
+| # | Step | What it does | Stage name in the Jenkinsfile |
+| :-- | :-- | :-- | :-- |
+| 1 | Announce | Sends a "build started" message to the team chat | `Notify, initialize time` |
+| 2 | Get the code | Clones the application repository over SSH | `Backend: Checkout` |
+| 3 | Build & test backend | `mvn clean package`, then `mvn test` with the `ci` Spring profile | `Backend: Build`, `Backend: Test` |
+| 4 | Build & test frontend | `npm ci`, `npm run build`, `npm run test` | `Frontend: Install`, `Build`, `Test` |
+| 5 | Check code quality | SonarQube analysis of the backend | `Backend: SonarQube Analysis` |
+| 6 | Package the apps | Builds both Docker images and pushes them to Docker Hub, tagged with the build number and `latest` | `Docker Build & push backend`, `Docker: Build & push frontend` |
+| 7 | Security scan | Trivy scan of the backend image, written to an HTML report | `Trivy Scan` |
+| 8 | Deliver | Updates the backend and frontend servers | `Deploy on EC2` |
 
+### Delivery to EC2
 
-## ⚙️ EC2 Pipeline
+<img src="docs/deploy-ec2.svg" alt="Jenkins publishes the new version to Docker Hub, logs in to each server over SSH, and each server downloads the new version and restarts the app with docker compose." width="100%">
 
-_Version complète avec ajout du déploiement continu sur AWS EC2, orientée production intégrant les aspects DevSecOps, qualité et observabilité._
+Jenkins connects to each server over SSH and runs `docker compose pull && docker compose up -d`: the server downloads the new images from Docker Hub and restarts the application with them. The SSH key is stored in Jenkins' credentials, and the two servers are set with the `BACKEND_HOST` and `FRONTEND_HOST` variables.
 
+---
 
-#### 🎯 Fonctionnalités :
+## Kubernetes pipeline
 
-**Ajouts:**
-- connexion SSH aux instances EC2 ;
-- mise à jour automatique via : ``docker compose pull``
+The same pipeline, except that the **backend runs on a Kubernetes cluster** instead of an EC2 server. Steps 1 to 7 are identical; only the delivery changes.
 
-**Infrastructure**
-- utilisation de DNS privés AWS (Route53) ;
-- variables centralisées pour faciliter la maintenance ;
-- déploiement backend/frontend sur EC2.
+<img src="docs/k8s-pipeline.svg" alt="The Kubernetes pipeline: same first seven steps, then the backend is delivered to a Kubernetes cluster and the frontend to an EC2 server." width="100%">
 
-**Qualité logicielle**
-- analyse de code avec SonarQube ;
-- vérification de la qualité via Quality Gate.
+| | EC2 pipeline | K8s pipeline |
+| :-- | :-- | :-- |
+| Backend delivery | SSH + `docker compose` on an EC2 server | `kubectl set image` on the cluster |
+| Frontend delivery | SSH + `docker compose` on an EC2 server | Unchanged: SSH + `docker compose` on an EC2 server |
+| Image tag | Build number | Unique generated tag |
+| Stages | `Deploy on EC2` | `Set new image k8s`, `Deploy frontend on EC2` |
 
-**Sécurité**
-- scan des images Docker avec Trivy ;
-- génération automatique d’un rapport HTML de sécurité.
+### Delivery to Kubernetes
 
-**Monitoring CI/CD**
-- notifications Discord :
-  - démarrage du build ;
-  - statut final (succès / échec).
+<img src="docs/deploy-k8s.svg" alt="Jenkins publishes the new image to Docker Hub with a unique tag, then runs kubectl set image. Kubernetes pulls the image and replaces the running copies of the backend one by one." width="100%">
 
+Each run gives the images a **unique tag**, so Kubernetes can tell that a new version exists. Jenkins then runs a single command, `kubectl set image deployment/backend backend=<image>:<tag>`, and Kubernetes takes over: it pulls the new image and replaces the running copies of the backend step by step (a rolling update).
 
+---
 
-#### 📈 Workflow
+## Quality and security
 
-```
-Logging
-  |
-  ├── Discord Notification (start, end)
-  |
-Continuous Integration
-  |
-  ├── GitHub (checkout)
-  ├── Build Backend (Maven)
-  ├── Tests Backend
-  ├── Build Frontend (npm)
-  ├── Tests Frontend
-  |
-Security
-  |
-  ├── Code Analysis (sonarqube)
-  ├── Security Scan (trivy)
-  |
-Continuous Deployment
-  |
-  ├── Docker Build backend
-  ├── Docker Build frontend
-  ├── Docker Hub (push)
-  └── EC2 Deployment
-```
+<img src="docs/quality-security.svg" alt="SonarQube analyses the backend source code and sends a quality report to its server. Trivy scans the backend Docker image and produces a security report in Jenkins." width="100%">
 
-Source: <a href="https://github.com/mondecole/jenkins/tree/main/pipelines/ec2_pipeline/">pipelines/ec2_pipeline/</a>
+- **SonarQube** analyses the backend code (`mvn sonar:sonar`) and sends the results to the SonarQube server configured in Jenkins.
+- **Trivy** scans the backend Docker image for known vulnerabilities and writes an HTML report using a custom template. It runs with `--exit-code 0`: it reports its findings without failing the build.
 
+## Notifications and reports
 
+<img src="docs/notifications.svg" alt="A chat message is sent when the run starts, and another when it ends, green on success and red on failure. Test results, the security report and a cleanup step also run on every build." width="100%">
 
-### ☸️ k8s Pipeline
+At the start of each run, and again at the end, the pipeline posts a message to a Discord channel through a webhook. The final message shows the build status and is **green on success, red on failure**. Its title links to the build in Jenkins.
 
-_Version Kubernetes de la pipeline EC2._
+A `post { always { ... } }` block runs whether the pipeline succeeded or failed. It:
 
-Différence principale : le déploiement n’est plus effectué directement sur une instance EC2. Donc dans la partie CD on remplace le `EC2 Deployment` par:
+- publishes the backend test results (`junit`)
+- publishes the Trivy report as a **Security Report** page next to the build (`publishHTML`)
+- sends the final chat message
+- removes heavy files that end up in the published report, to save disk space
 
-- mise à jour du déploiement Kubernetes (`kubectl rollout`);
-- redéploiement automatique des pods backend par le Control Plane.
+---
 
+## Setup
 
-#### 📈 Workflow
+### Jenkins configuration
 
+| Item | Used for |
+| :-- | :-- |
+| Tools `M3` and `N20` | Maven 3 and Node.js 20 (Manage Jenkins → Tools) |
+| SonarQube server named `sonarqube` | `withSonarQubeEnv` (Manage Jenkins → System) |
+| Plugins | Pipeline, Git, Credentials Binding, Docker Pipeline, SSH Agent, NodeJS, SonarQube Scanner, JUnit, HTML Publisher |
 
-```
-Logging
-  |
-  ├── Discord Notification (start, end)
-  |
-Continuous Integration
-  |
-  ├── GitHub (checkout)
-  ├── Build Backend (Maven)
-  ├── Tests Backend
-  ├── Build Frontend (npm)
-  ├── Tests Frontend
-  |
-Security
-  |
-  ├── Code Analysis (sonarqube)
-  ├── Security Scan (trivy)
-  |
-Continuous Deployment
-  |
-  ├── Docker Build backend
-  ├── Docker Build frontend
-  ├── Docker Hub (push)
-  |
-Kubernetes 
-  |
-  ├── kubectl rollout
-  └── Pod Update
-```
+On the Jenkins agent: Docker, the [Trivy](https://github.com/aquasecurity/trivy) binary and its HTML template (`/var/jenkins_home/trivy` and `/var/jenkins_home/html.tpl`), and, for the K8s pipeline, `kubectl` configured to reach your cluster.
 
-Source: <a href="https://github.com/mondecole/jenkins/tree/main/pipelines/k8s_pipeline/">pipelines/k8s_pipeline/</a>
+### Credentials
 
+| ID | Type | Used for |
+| :-- | :-- | :-- |
+| `jenkins-ssh-key` | SSH private key | Cloning the application repository from GitHub |
+| `docker-hub-creds` | Username and password | Pushing the Docker images |
+| `aws-key` | SSH private key | Logging in to the servers to deliver the new version |
+| `discord-webhook` | Secret text | Posting the chat messages |
 
+### Variables
+
+Set these in the `environment` block of the Jenkinsfile.
+
+| Variable | Purpose |
+| :-- | :-- |
+| `GITHUB_REPO_SSH`, `GITHUB_BRANCH` | Application repository and branch to build |
+| `DOCKER_REGISTRY` | Docker registry URL |
+| `DOCKER_BACKEND_IMAGE`, `DOCKER_FRONTEND_IMAGE` | Names of the Docker images (`user/backend`, `user/frontend`) |
+| `SPRING_DATASOURCE_URL`, `SPRING_PROFILES_ACTIVE` | Database and Spring profile used by the backend tests |
+| `BACKEND_HOST`, `FRONTEND_HOST` | Servers to deliver to (EC2 pipeline). The K8s pipeline only uses `FRONTEND_HOST` |
+
+Then create a **Pipeline** job in Jenkins and point it to the Jenkinsfile of the pipeline you want to use.
+
+## Works well with
+
+The servers these pipelines deliver to can be prepared with my [Ansible playbooks](https://github.com/NullBrunk/Ansible): common admin user, SSH access, stable internal host names and Docker.
+
+## Skills demonstrated
+
+- **CI/CD**: declarative Jenkins pipelines, multi-stage builds, credentials management
+- **Containers**: Docker image build and publishing, Docker Compose delivery
+- **Kubernetes**: rolling updates with `kubectl`
+- **DevSecOps**: static analysis with SonarQube, image scanning with Trivy
+- **Observability**: chat notifications, test and security reports
+- **AWS**: EC2 delivery over SSH

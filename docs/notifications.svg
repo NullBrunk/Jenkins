@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 530" width="1000" height="530" font-family="Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title>Notifications and reports: team chat messages at the start and end of each run, plus reports</title>
+<defs><marker id="m64748B" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#64748B"/></marker></defs>
+<rect width="1000" height="530" rx="18" fill="#F8FAFC"/>
+<text x="30" y="36" font-size="10.5" font-weight="700" fill="#64748B" text-anchor="start" letter-spacing="1">TEAM CHAT MESSAGES</text>
+<text x="30" y="64" font-size="13" font-weight="700" fill="#0F172A" text-anchor="start">When the run starts</text>
+<rect x="30" y="76" width="310" height="92" rx="8" fill="#2B2D31" stroke="#2B2D31" stroke-width="1"/>
+<rect x="30" y="76" width="5" height="92" rx="2.5" fill="#6B7280"/>
+<text x="54" y="114" font-size="13.5" font-weight="700" fill="#00A8FC" text-anchor="start">my-app-pipeline</text>
+<text x="54" y="140" font-size="13" font-weight="400" fill="#E5E7EB" text-anchor="start">Build #42 started</text>
+<text x="30" y="190" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="start">The title links to the build page</text>
+<text x="30" y="206" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="start">in Jenkins.</text>
+<path d="M344 122H404" stroke="#64748B" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-dasharray="6 5" marker-end="url(#m64748B)"/>
+<rect x="408" y="98" width="150" height="48" rx="24" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
+<text x="483" y="127" font-size="13" font-weight="600" fill="#1D4ED8" text-anchor="middle">Pipeline runs…</text>
+<path d="M562 122H620M620 122V234" stroke="#64748B" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+<path d="M620 122H656" stroke="#64748B" stroke-width="2.5" fill="none" stroke-linejoin="round" marker-end="url(#m64748B)"/>
+<path d="M620 234H656" stroke="#64748B" stroke-width="2.5" fill="none" stroke-linejoin="round" marker-end="url(#m64748B)"/>
+<text x="660" y="64" font-size="13" font-weight="700" fill="#0F172A" text-anchor="start">When it finishes</text>
+<rect x="660" y="76" width="310" height="92" rx="8" fill="#2B2D31" stroke="#2B2D31" stroke-width="1"/>
+<rect x="660" y="76" width="5" height="92" rx="2.5" fill="#19A719"/>
+<text x="684" y="114" font-size="13.5" font-weight="700" fill="#00A8FC" text-anchor="start">my-app-pipeline</text>
+<text x="684" y="140" font-size="13" font-weight="400" fill="#E5E7EB" text-anchor="start">Build #42 ended with status: SUCCESS</text>
+<rect x="660" y="188" width="310" height="92" rx="8" fill="#2B2D31" stroke="#2B2D31" stroke-width="1"/>
+<rect x="660" y="188" width="5" height="92" rx="2.5" fill="#AC1917"/>
+<text x="684" y="226" font-size="13.5" font-weight="700" fill="#00A8FC" text-anchor="start">my-app-pipeline</text>
+<text x="684" y="252" font-size="13" font-weight="400" fill="#E5E7EB" text-anchor="start">Build #42 ended with status: FAILURE</text>
+<text x="660" y="296" font-size="11.5" font-weight="400" fill="#64748B" text-anchor="start">Green when it succeeds, red when it fails.</text>
+<text x="30" y="328" font-size="10.5" font-weight="700" fill="#64748B" text-anchor="start" letter-spacing="1">ALSO PRODUCED ON EVERY RUN</text>
+<rect x="30" y="342" width="300" height="150" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<circle cx="66" cy="378" r="20" fill="#2563EB"/>
+<g transform="translate(66,378) scale(0.9090909090909091)" fill="none" stroke="#FFFFFF" stroke-width="2.42" stroke-linecap="round" stroke-linejoin="round"><path d="M-8 -12H3L9 -6V12H-8ZM3 -12V-6H9M-4 0H5M-4 4H5M-4 8H1"/></g>
+<text x="98" y="383" font-size="14" font-weight="700" fill="#0F172A" text-anchor="start">Test results</text>
+<text x="50" y="418" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Backend test results are saved</text>
+<text x="50" y="434" font-size="12" font-weight="400" fill="#475569" text-anchor="start">in Jenkins, so you can see what</text>
+<text x="50" y="450" font-size="12" font-weight="400" fill="#475569" text-anchor="start">passed or failed.</text>
+<rect x="50" y="460" width="49" height="22" rx="11.0" fill="#EFF6FF" stroke="#BFDBFE"/>
+<text x="59" y="474.6" font-size="10" font-weight="600" fill="#1D4ED8" text-anchor="start" font-family="'JetBrains Mono','SF Mono',Consolas,monospace">junit</text>
+<rect x="350" y="342" width="300" height="150" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<circle cx="386" cy="378" r="20" fill="#EA580C"/>
+<g transform="translate(386,378) scale(0.9090909090909091)" fill="none" stroke="#FFFFFF" stroke-width="2.42" stroke-linecap="round" stroke-linejoin="round"><path d="M0 -12L10 -8V0C10 7 5 11 0 13C-5 11 -10 7 -10 0V-8ZM-4 0L-1 3L4 -3"/></g>
+<text x="418" y="383" font-size="14" font-weight="700" fill="#0F172A" text-anchor="start">Security report</text>
+<text x="370" y="418" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Trivy's findings are published as</text>
+<text x="370" y="434" font-size="12" font-weight="400" fill="#475569" text-anchor="start">an HTML page named “Security</text>
+<text x="370" y="450" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Report”, next to the build.</text>
+<rect x="370" y="460" width="86" height="22" rx="11.0" fill="#FFF7ED" stroke="#FED7AA"/>
+<text x="379" y="474.6" font-size="10" font-weight="600" fill="#9A3412" text-anchor="start" font-family="'JetBrains Mono','SF Mono',Consolas,monospace">publishHTML</text>
+<rect x="670" y="342" width="300" height="150" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+<circle cx="706" cy="378" r="20" fill="#475569"/>
+<g transform="translate(706,378) scale(0.9090909090909091)" fill="none" stroke="#FFFFFF" stroke-width="2.42" stroke-linecap="round" stroke-linejoin="round"><path d="M-9 -7H9M-6 -7V11H6V-7M-3 -11H3V-7M-2 -3V7M2 -3V7"/></g>
+<text x="738" y="383" font-size="14" font-weight="700" fill="#0F172A" text-anchor="start">Cleanup</text>
+<text x="690" y="418" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Removes heavy files that end up</text>
+<text x="690" y="434" font-size="12" font-weight="400" fill="#475569" text-anchor="start">in the published report, to save</text>
+<text x="690" y="450" font-size="12" font-weight="400" fill="#475569" text-anchor="start">disk space on Jenkins.</text>
+<rect x="690" y="460" width="55" height="22" rx="11.0" fill="#F1F5F9" stroke="#CBD5E1"/>
+<text x="699" y="474.6" font-size="10" font-weight="600" fill="#334155" text-anchor="start" font-family="'JetBrains Mono','SF Mono',Consolas,monospace">rm -rf</text>
+<text x="500" y="516" font-size="12" font-weight="400" fill="#64748B" text-anchor="middle">These steps run whether the pipeline succeeded or failed.</text>
+</svg>
