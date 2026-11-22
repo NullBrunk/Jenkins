@@ -24,22 +24,23 @@ pipeline {
     }
     
     stages {
-        stage("Notify, initialize time") {
-            steps {
-                withCredentials([ string(credentialsId: 'discord-webhook',variable: 'DISCORD_WEBHOOK') ]) {
-                    sh """ curl -H "Content-Type: application/json" -X POST \
-                        -d '{
-                            "embeds": [{
-                                "title": "${env.JOB_NAME}",
-                                "url": "${env.BUILD_URL}",
-                                "description": "Build ``#${env.BUILD_NUMBER}`` started",
-                                "color": 0
-                            }]
-                        }' ${DISCORD_WEBHOOK}
-                        """
-                }
-            }
-        }
+        //stage("Notify, initialize time") {
+        //    steps {
+        //        withCredentials([ string(credentialsId: 'discord-webhook',variable: 'DISCORD_WEBHOOK') ]) {
+        //            sh """ curl -H "Content-Type: application/json" -X POST \
+        //                -d '{
+        //                    "embeds": [{
+        //                        "title": "${env.JOB_NAME}",
+        //                        "url": "${env.BUILD_URL}",
+        //                        "description": "Build ``#${env.BUILD_NUMBER}`` started",
+        //                        "color": 0
+        //                    }]
+        //                }' ${DISCORD_WEBHOOK}
+        //                """
+        //        }
+        //    }
+        //}
+        
         stage("Backend: Checkout") {
             steps {
                 git(
@@ -159,23 +160,18 @@ pipeline {
                 reportName           : 'Security Report'
             ])  
 
-            withCredentials([ string(credentialsId: 'discord-webhook',variable: 'DISCORD_WEBHOOK') ]) {
-                sh """ curl -H "Content-Type: application/json" -X POST \
-                    -d '{
-                        "embeds": [{
-                            "title": "${env.JOB_NAME}",
-                            "url": "${env.BUILD_URL}",
-                            "description": "Build ``#${env.BUILD_NUMBER}`` ended with status: ``${currentBuild.currentResult}``",
-                            "color": ${currentBuild.currentResult == "SUCCESS" ? 1681177 : 11278615}
-                        }]
-                    }' ${DISCORD_WEBHOOK}
-                """
-            }
-
-            // Suppression de dossier de cache lourd
-            sh "rm -rf '${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/htmlreports/Security_20Report/frontend'"
-            sh "rm -rf '${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/htmlreports/Security_20Report/target/mondecole-pocket-0.0.1-SNAPSHOT.jar'"        
-
+            //withCredentials([ string(credentialsId: 'discord-webhook',variable: 'DISCORD_WEBHOOK') ]) {
+            //    sh """ curl -H "Content-Type: application/json" -X POST \
+            //        -d '{
+            //            "embeds": [{
+            //                "title": "${env.JOB_NAME}",
+            //                "url": "${env.BUILD_URL}",
+            //                "description": "Build ``#${env.BUILD_NUMBER}`` ended with status: ``${currentBuild.currentResult}``",
+            //                "color": ${currentBuild.currentResult == "SUCCESS" ? 1681177 : 11278615}
+            //            }]
+            //        }' ${DISCORD_WEBHOOK}
+            //    """
+            //}
         }
     }
 }
