@@ -12,7 +12,7 @@ _CI/CD pipelines for a Java + Node.js application, delivered on AWS EC2 or Kuber
 
 </div>
 
-Two ready-to-use Jenkins DevSecOps pipelines that take an application from source code to a running service: they **build and test** it, **check its quality and security**, **package it in Docker images**, **deliver** it to the servers. Everything runs automatically, from a single Jenkinsfile.
+Jenkins DevSecOps pipelines that take an application from source code to a running service: **build and test**, **quality and security** checks, Docker images **packaging**, servers **delivery** . Everything runs automatically, from a single Jenkinsfile.
 
 Originally written during my junior DevOps internship, then made generic so it can be reused on any project.
 
@@ -25,8 +25,6 @@ Originally written during my junior DevOps internship, then made generic so it c
 | [EC2 pipeline](pipelines/ec2_pipeline/Jenkinsfile) | An EC2 server | An EC2 server |
 | [K8s pipeline](pipelines/k8s_pipeline/Jenkinsfile) | A Kubernetes cluster | An EC2 server |
 
-Both pipelines share the same first seven steps. Only the last one, the delivery, differs.
-
 ---
 
 ## EC2 pipeline
@@ -37,14 +35,13 @@ The complete pipeline: it builds, tests, checks, packages and delivers the appli
 
 | # | Step | What it does | Stage name in the Jenkinsfile |
 | :-- | :-- | :-- | :-- |
-| 1 | Announce | Sends a "build started" message to the team chat | `Notify, initialize time` |
-| 2 | Get the code | Clones the application repository over SSH | `Backend: Checkout` |
-| 3 | Build & test backend | `mvn clean package`, then `mvn test` with the `ci` Spring profile | `Backend: Build`, `Backend: Test` |
-| 4 | Build & test frontend | `npm ci`, `npm run build`, `npm run test` | `Frontend: Install`, `Build`, `Test` |
-| 5 | Check code quality | SonarQube analysis of the backend | `Backend: SonarQube Analysis` |
-| 6 | Package the apps | Builds both Docker images and pushes them to Docker Hub, tagged with the build number and `latest` | `Docker Build & push backend`, `Docker: Build & push frontend` |
-| 7 | Security scan | Trivy scan of the backend image, written to an HTML report | `Trivy Scan` |
-| 8 | Deliver | Updates the backend and frontend servers | `Deploy on EC2` |
+| 1 | Get the code | Clones the application repository over SSH | `Backend: Checkout` |
+| 2 | Build & test backend | `mvn clean package`, then `mvn test` with the `ci` Spring profile | `Backend: Build`, `Backend: Test` |
+| 3 | Build & test frontend | `npm ci`, `npm run build`, `npm run test` | `Frontend: Install`, `Build`, `Test` |
+| 4 | Check code quality | SonarQube analysis of the backend | `Backend: SonarQube Analysis` |
+| 5 | Package the apps | Builds both Docker images and pushes them to Docker Hub, tagged with the build number and `latest` | `Docker Build & push backend`, `Docker: Build & push frontend` |
+| 6 | Security scan | Trivy scan of the backend image, written to an HTML report | `Trivy Scan` |
+| 7 | Deliver | Updates the backend and frontend servers | `Deploy on EC2` |
 
 ### Delivery to EC2
 
@@ -81,19 +78,6 @@ Each run gives the images a **unique tag**, so Kubernetes can tell that a new ve
 
 - **SonarQube** analyses the backend code (`mvn sonar:sonar`) and sends the results to the SonarQube server configured in Jenkins.
 - **Trivy** scans the backend Docker image for known vulnerabilities and writes an HTML report using a custom template. It runs with `--exit-code 0`: it reports its findings without failing the build.
-
-## Notifications and reports
-
-<img src="docs/notifications.svg" alt="A chat message is sent when the run starts, and another when it ends, green on success and red on failure. Test results, the security report and a cleanup step also run on every build." width="100%">
-
-At the start of each run, and again at the end, the pipeline posts a message to a Discord channel through a webhook. The final message shows the build status and is **green on success, red on failure**. Its title links to the build in Jenkins.
-
-A `post { always { ... } }` block runs whether the pipeline succeeded or failed. It:
-
-- publishes the backend test results (`junit`)
-- publishes the Trivy report as a **Security Report** page next to the build (`publishHTML`)
-- sends the final chat message
-- removes heavy files that end up in the published report, to save disk space
 
 ---
 
