@@ -12,7 +12,7 @@ _CI/CD pipelines for a Java + Node.js application, delivered on AWS EC2 or Kuber
 
 </div>
 
-Two ready-to-use Jenkins pipelines that take an application from source code to a running service: they **build and test** it, **check its quality and security**, **package it in Docker images**, **deliver** it to the servers and **tell the team** how it went. Everything runs automatically, from a single Jenkinsfile.
+Two ready-to-use Jenkins DevSecOps pipelines that take an application from source code to a running service: they **build and test** it, **check its quality and security**, **package it in Docker images**, **deliver** it to the servers. Everything runs automatically, from a single Jenkinsfile.
 
 Originally written during my junior DevOps internship, then made generic so it can be reused on any project.
 
